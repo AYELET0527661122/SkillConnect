@@ -7,7 +7,7 @@
 
 ## 🌐 Live Demo
 
-🔗 https://skillconnect-app-rho.vercel.app/
+🔗 [skillconnect-app-rho.vercel.app](https://skillconnect-app-rho.vercel.app/)
 
 ---
 
@@ -120,34 +120,6 @@ This is currently **100% free** during beta. Future premium plans:
 - **Direct chat** — message teachers without email
 
 > 💡 The key insight: students want to reach teachers who are **available now**, not profiles from 6 months ago. Premium gives them exactly that filter — see who joined or was active **today**.
-
----
-
-## 🚀 Getting Started
-
-### Run locally
-Just open `skillconnect.html` in any browser. No installation needed.
-
-### Deploy to Vercel (free)
-1. Go to [vercel.com](https://vercel.com) → **New Project**
-2. Drag & drop `skillconnect.html`
-3. Done — get a live link in 30 seconds
-
-### Deploy to Netlify (free)
-1. Go to [netlify.com](https://netlify.com) → **Deploy manually**
-2. Drag & drop the file
-3. Done ✅
-
----
-
-## 📁 Project Structure
-
-```
-skillconnect/
-│
-├── skillconnect.html     # Entire app — HTML + CSS + JS in one file
-├── README.md             # This file
-```
 
 ---
 
