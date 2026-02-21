@@ -755,7 +755,14 @@ function showPage(page) {
       return;
     }
   }
-  if (page === 'search') renderUsers();
+  if (page === 'search') {
+    // Reset field filter so new users aren't hidden
+    const ff = document.getElementById('fieldFilter');
+    if (ff) ff.value = '';
+    const si = document.getElementById('searchInput');
+    if (si) si.value = '';
+    renderUsers();
+  }
   window.scrollTo(0,0);
 }
 
@@ -860,7 +867,7 @@ function renderUsers() {
   const fieldF = document.getElementById('fieldFilter')?.value || '';
 
   let filtered = allUsers.filter(u => {
-    if (u.id === currentUser.id) return false;
+    if (String(u.id) === String(currentUser.id)) return false;
     if (u.role !== oppositeRole) return false;
     const matchSearch = !search || u.name.toLowerCase().includes(search) || (u.field||'').toLowerCase().includes(search) || (u.bio||'').toLowerCase().includes(search) || (u.skills||[]).some(s=>s.toLowerCase().includes(search));
     const matchField = !fieldF || u.field === fieldF;
@@ -929,51 +936,65 @@ function handleAuth() {
 
   if (!email || !email.includes('@')) { showErr('errEmail'); valid=false; }
   if (!pass || pass.length < 6) { showErr('errPass'); valid=false; }
+  if (!valid) return;
+
+  const role = selectedRole || 'learn';
 
   if (authMode === 'login') {
-    if (!valid) return;
     const users = [...DEMO_USERS, ...JSON.parse(localStorage.getItem('sc_users')||'[]')];
-    // Find by email — any role
+    // Find by email + password
     const found = users.find(u => u.email === email);
     if (!found) {
       showErr('errEmail', 'No account found with this email');
       return;
     }
-    // Override role with what they selected at login (teacher today, learner tomorrow)
-    currentUser = { ...found, role: selectedRole || found.role };
+    // Check password (demo users have no password — any password works for them)
+    if (found.pass && found.pass !== pass) {
+      showErr('errPass', 'Wrong password');
+      return;
+    }
+    // Apply selected role (same person can enter as teacher or learner)
+    currentUser = { ...found, role: role };
     localStorage.setItem('sc_user', JSON.stringify(currentUser));
     updateNav();
     showToast('Welcome back, ' + found.name + '! 👋');
-    showPage('home');
+    showPage('search');
     return;
   }
 
-  // Register
+  // ── REGISTER ──────────────────────────────────────────────────────────────
   const name = document.getElementById('regName').value.trim();
   if (!name) { showErr('errName'); valid=false; }
   if (!valid) return;
 
   const field = document.getElementById('regField').value.trim() || 'General';
   const bio = document.getElementById('regBio').value.trim();
-  const role = selectedRole || 'learn';
 
   const existingUsers = JSON.parse(localStorage.getItem('sc_users')||'[]');
   const allExist = [...DEMO_USERS, ...existingUsers];
-  // Block only if exact same email + same role already exists
-  if (allExist.find(u => u.email === email && u.role === role)) {
-    // Already registered with this role — just log them in
-    const existing = allExist.find(u => u.email === email && u.role === role);
-    currentUser = { ...existing, role: role };
+
+  // Check if email + password already exist → just log in, don't create new user
+  const existingMatch = allExist.find(u => u.email === email && u.pass === pass);
+  if (existingMatch) {
+    currentUser = { ...existingMatch, role: role };
     registeredUsers = existingUsers;
     allUsers = [...DEMO_USERS, ...registeredUsers];
     localStorage.setItem('sc_user', JSON.stringify(currentUser));
     updateNav();
-    showToast('Welcome back, ' + existing.name + '! 👋');
+    showToast('Welcome back, ' + existingMatch.name + '! 👋');
     showPage('search');
     return;
   }
 
-  const newUser = { id: Date.now(), name, email, role, field, bio, skills: field ? [field] : [] };
+  // Check if email exists but password is wrong
+  const emailExists = allExist.find(u => u.email === email);
+  if (emailExists) {
+    showErr('errPass', 'Wrong password for this email');
+    return;
+  }
+
+  // New user — create and save
+  const newUser = { id: Date.now(), name, email, pass, role, field, bio, skills: field ? [field] : [] };
   existingUsers.push(newUser);
   localStorage.setItem('sc_users', JSON.stringify(existingUsers));
   currentUser = newUser;
@@ -982,7 +1003,7 @@ function handleAuth() {
   localStorage.setItem('sc_user', JSON.stringify(currentUser));
   updateNav();
   showToast('Welcome to SkillConnect, ' + name + '! 🎉');
-  showPage('home');
+  showPage('search');
 }
 
 function showErr(id, msg) {
