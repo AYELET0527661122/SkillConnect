@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillConnect — Find Skills. Share Knowledge.</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b14;
+    --surface: rgba(255,255,255,0.04);
+    --surface2: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.09);
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent-glow: rgba(124,58,237,0.35);
+    --text: #f0f0f8;
+    --muted: #8b8fa8;
+    --card-bg: rgba(13,16,30,0.85);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .light {
+    --bg: #f0f2fa;
+    --surface: rgba(0,0,0,0.04);
+    --surface2: rgba(0,0,0,0.07);
+    --border: rgba(0,0,0,0.09);
+    --text: #111827;
+    --muted: #6b7280;
+    --card-bg: rgba(255,255,255,0.85);
+    --accent-glow: rgba(124,58,237,0.15);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+  /* Animated mesh background */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 20%, rgba(124,58,237,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(6,182,212,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 30%, rgba(167,139,250,0.08) 0%, transparent 50%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .light body::before { opacity: 0.5; }
+
+  /* NAV */
+  nav {
+    position: sticky; top:0; z-index: 100;
+    display: flex; align-items:center; justify-content:space-between;
+    padding: 0 2rem;
+    height: 64px;
+    background: rgba(8,11,20,0.75);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+  .light nav { background: rgba(240,242,250,0.8); }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #a78bfa, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    cursor: pointer;
+    letter-spacing: -0.5px;
+  }
+  .nav-links { display:flex; gap:0.5rem; align-items:center; }
+  .nav-links button {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; padding: 0.4rem 0.9rem; border-radius: 8px;
+    transition: all var(--transition);
+  }
+  .nav-links button:hover { color: var(--text); background: var(--surface); }
+  .nav-links button.active { color: var(--text); }
+  .btn-nav-cta {
+    background: linear-gradient(135deg, var(--accent), #9333ea) !important;
+    color: white !important; font-weight: 500 !important;
+    padding: 0.4rem 1.2rem !important; border-radius: 20px !important;
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+  .theme-toggle {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 50% !important;
+    width: 36px; height: 36px;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 1rem; padding:0 !important;
+    color: var(--text) !important;
+  }
+
+  /* PAGES */
+  .page { display:none; position:relative; z-index:1; }
+  .page.active { display:block; }
+
+  /* HOME */
+  .hero {
+    min-height: calc(100vh - 64px);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding: 4rem 1.5rem;
+  }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:0.4rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.8rem;
+    color: var(--muted); margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge span { color: var(--accent2); }
+  h1.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -2px;
+    animation: fadeUp 0.6s 0.1s ease both;
+    max-width: 800px;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: 1.15rem; color: var(--muted); max-width: 520px;
+    margin: 1.5rem auto; line-height: 1.7;
+    animation: fadeUp 0.6s 0.2s ease both;
+    font-weight: 300;
+  }
+  .hero-btns {
+    display:flex; gap: 1rem; flex-wrap:wrap; justify-content:center;
+    animation: fadeUp 0.6s 0.3s ease both; margin-top: 0.5rem;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    color: white; border:none; cursor:pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 500;
+    font-size: 1rem; padding: 0.8rem 2rem; border-radius: 40px;
+    box-shadow: 0 4px 24px var(--accent-glow);
+    transition: all var(--transition); letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); cursor:pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 500;
+    font-size: 1rem; padding: 0.8rem 2rem; border-radius: 40px;
+    transition: all var(--transition); backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover { background: var(--surface); border-color: var(--accent); }
+
+  /* Stats */
+  .stats-row {
+    display:flex; gap:3rem; justify-content:center; flex-wrap:wrap;
+    margin-top: 4rem; animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat { text-align:center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa, #06b6d4);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+  /* Features */
+  .features {
+    padding: 5rem 1.5rem;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700;
+    text-align:center; margin-bottom: 0.75rem; letter-spacing: -0.5px;
+  }
+  .section-sub { text-align:center; color: var(--muted); margin-bottom: 3rem; font-weight:300; }
+  .features-grid {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:1.5rem;
+  }
+  .feature-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.8rem;
+    backdrop-filter: blur(20px);
+    transition: all var(--transition);
+    position:relative; overflow:hidden;
+  }
+  .feature-card::before {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(135deg, var(--accent), transparent);
+    opacity:0; transition: opacity var(--transition);
+  }
+  .feature-card:hover { transform:translateY(-4px); border-color: rgba(124,58,237,0.4); }
+  .feature-card:hover::before { opacity: 0.05; }
+  .feature-icon {
+    width:48px; height:48px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.4rem; margin-bottom:1rem;
+    background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.2));
+    border: 1px solid rgba(124,58,237,0.3);
+  }
+  .feature-title { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:0.5rem; }
+  .feature-desc { color: var(--muted); font-size:0.9rem; line-height:1.6; font-weight:300; }
+
+  /* SEARCH PAGE */
+  .page-wrap { max-width:1100px; margin:0 auto; padding:2.5rem 1.5rem; }
+  .page-header { margin-bottom:2rem; }
+  .page-header h2 { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; letter-spacing:-0.5px; }
+  .page-header p { color:var(--muted); margin-top:0.3rem; font-weight:300; }
+  .search-bar-row { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .search-input-wrap { flex:1; min-width:200px; position:relative; }
+  .search-input-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); width:18px; height:18px; }
+  .search-input {
+    width:100%; padding:0.75rem 1rem 0.75rem 2.8rem;
+    background: var(--surface2); border:1px solid var(--border);
+    border-radius: 40px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.95rem;
+    outline:none; transition: all var(--transition);
+  }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .filter-select {
+    padding:0.75rem 1.2rem; background: var(--surface2);
+    border:1px solid var(--border); border-radius: 40px;
+    color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem;
+    outline:none; cursor:pointer; transition: all var(--transition);
+  }
+  .filter-select:focus { border-color:var(--accent); }
+  .users-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.2rem; }
+  .user-card {
+    background: var(--card-bg); border:1px solid var(--border);
+    border-radius: var(--radius); padding:1.5rem;
+    backdrop-filter:blur(20px); transition: all var(--transition);
+    cursor:pointer; position:relative; overflow:hidden;
+  }
+  .user-card::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0); transform-origin:left; transition: transform var(--transition);
+  }
+  .user-card:hover { transform:translateY(-3px); border-color:rgba(124,58,237,0.35); }
+  .user-card:hover::after { transform:scaleX(1); }
+  .user-avatar {
+    width:52px; height:52px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:1.3rem;
+    color:white; margin-bottom:1rem; flex-shrink:0;
+  }
+  .user-name { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
+  .user-role-badge {
+    display:inline-flex; align-items:center; gap:0.3rem;
+    padding:0.2rem 0.7rem; border-radius:20px; font-size:0.72rem;
+    font-weight:500; margin: 0.3rem 0 0.6rem;
+  }
+  .badge-teacher { background:rgba(124,58,237,0.18); color:#a78bfa; border:1px solid rgba(124,58,237,0.3); }
+  .badge-learner { background:rgba(6,182,212,0.18); color:#67e8f9; border:1px solid rgba(6,182,212,0.3); }
+  .user-field { font-size:0.8rem; color:var(--muted); margin-bottom:0.5rem; }
+  .user-desc { font-size:0.85rem; color:var(--muted); line-height:1.5; font-weight:300; margin-bottom:1rem;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .btn-view {
+    width:100%; padding:0.55rem; border-radius:40px;
+    background: var(--surface2); border:1px solid var(--border);
+    color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.85rem;
+    cursor:pointer; transition: all var(--transition);
+  }
+  .btn-view:hover { background:var(--accent); border-color:var(--accent); color:white; }
+  .fav-btn {
+    position:absolute; top:1rem; right:1rem;
+    background:none; border:none; cursor:pointer; font-size:1.1rem;
+    opacity:0.5; transition: all var(--transition);
+  }
+  .fav-btn:hover, .fav-btn.active { opacity:1; }
+
+  /* AUTH PAGE */
+  .auth-wrap {
+    min-height: calc(100vh - 64px);
+    display:flex; align-items:center; justify-content:center;
+    padding: 2rem 1.5rem;
+  }
+  .auth-box {
+    width:100%; max-width:420px;
+    background: var(--card-bg); border:1px solid var(--border);
+    border-radius: 24px; padding: 2.5rem;
+    backdrop-filter:blur(24px);
+    box-shadow: 0 20px 80px rgba(0,0,0,0.3);
+  }
+  .auth-box h2 { font-family:'Syne',sans-serif; font-weight:800; font-size:1.6rem; margin-bottom:0.3rem; }
+  .auth-box p { color:var(--muted); font-size:0.9rem; margin-bottom:2rem; font-weight:300; }
+  .form-group { margin-bottom:1.2rem; }
+  label { display:block; font-size:0.82rem; font-weight:500; margin-bottom:0.4rem; color:var(--muted); letter-spacing:0.3px; }
+  .form-input {
+    width:100%; padding:0.8rem 1rem;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius: var(--radius-sm); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;
+    transition: all var(--transition);
+  }
+  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+  .role-options { display:flex; gap:0.75rem; }
+  .role-opt {
+    flex:1; padding:0.9rem; border-radius:var(--radius-sm);
+    border:2px solid var(--border); background:var(--surface);
+    cursor:pointer; text-align:center; transition: all var(--transition);
+    font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--muted);
+  }
+  .role-opt.selected { border-color:var(--accent); color:var(--text); background:rgba(124,58,237,0.15); }
+  .role-opt .role-icon { font-size:1.4rem; display:block; margin-bottom:0.3rem; }
+  .btn-submit { width:100%; margin-top:0.5rem; }
+  .auth-toggle { text-align:center; margin-top:1.2rem; font-size:0.88rem; color:var(--muted); }
+  .auth-toggle a { color:#a78bfa; cursor:pointer; font-weight:500; }
+  .auth-toggle a:hover { text-decoration:underline; }
+  .error-msg { color:#f87171; font-size:0.82rem; margin-top:0.4rem; display:none; }
+
+  /* PROFILE PAGE */
+  .profile-wrap { max-width:700px; margin:0 auto; padding:2.5rem 1.5rem; }
+  .profile-header {
+    background: var(--card-bg); border:1px solid var(--border);
+    border-radius: var(--radius); padding:2rem; backdrop-filter:blur(20px);
+    margin-bottom:1.5rem; position:relative; overflow:hidden;
+  }
+  .profile-header::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .profile-top { display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap; }
+  .profile-avatar {
+    width:80px; height:80px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:2rem; color:white;
+    flex-shrink:0;
+  }
+  .profile-info h2 { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; }
+  .profile-info .field-tag {
+    display:inline-block; margin:0.4rem 0;
+    padding:0.2rem 0.8rem; border-radius:20px; font-size:0.8rem;
+    background: rgba(124,58,237,0.18); color:#a78bfa;
+    border:1px solid rgba(124,58,237,0.3);
+  }
+  .profile-info .bio { color:var(--muted); font-size:0.9rem; line-height:1.6; font-weight:300; margin-top:0.5rem; }
+  .profile-actions { display:flex; gap:0.75rem; margin-top:1.2rem; flex-wrap:wrap; }
+  .btn-contact {
+    padding:0.65rem 1.5rem; border-radius:40px;
+    background: linear-gradient(135deg,var(--accent),#9333ea);
+    color:white; border:none; font-family:'DM Sans',sans-serif; font-weight:500;
+    cursor:pointer; transition: all var(--transition); font-size:0.9rem;
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+  .btn-contact:hover { transform:translateY(-2px); }
+  .profile-section {
+    background: var(--card-bg); border:1px solid var(--border);
+    border-radius: var(--radius); padding:1.5rem; backdrop-filter:blur(20px);
+    margin-bottom:1rem;
+  }
+  .profile-section h3 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:1rem; font-size:1rem; }
+  .skill-chips { display:flex; flex-wrap:wrap; gap:0.5rem; }
+  .skill-chip {
+    padding:0.3rem 0.9rem; border-radius:20px; font-size:0.8rem;
+    background:var(--surface2); border:1px solid var(--border); color:var(--muted);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    z-index:200; display:flex; align-items:center; justify-content:center;
+    padding:1rem; opacity:0; pointer-events:none;
+    transition: opacity var(--transition); backdrop-filter:blur(4px);
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background: var(--card-bg); border:1px solid var(--border);
+    border-radius:24px; padding:2rem; max-width:420px; width:100%;
+    transform:scale(0.95) translateY(10px); transition: transform var(--transition);
+    backdrop-filter:blur(24px);
+  }
+  .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+  .modal h3 { font-family:'Syne',sans-serif; font-weight:800; margin-bottom:0.5rem; }
+  .modal p { color:var(--muted); font-size:0.9rem; margin-bottom:1.2rem; font-weight:300; }
+  .modal-close {
+    float:right; background:none; border:none; cursor:pointer;
+    color:var(--muted); font-size:1.2rem; line-height:1;
+  }
+  .toast {
+    position:fixed; bottom:2rem; right:2rem; z-index:300;
+    background: linear-gradient(135deg,var(--accent),#9333ea);
+    color:white; padding:0.8rem 1.5rem; border-radius:40px;
+    font-size:0.9rem; font-weight:500;
+    box-shadow: 0 8px 32px var(--accent-glow);
+    transform:translateY(100px); opacity:0;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    pointer-events:none;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .fade-in { animation: fadeUp 0.5s ease both; }
+
+  /* Empty state */
+  .empty-state { text-align:center; padding:4rem 1rem; color:var(--muted); }
+  .empty-state .icon { font-size:3rem; margin-bottom:1rem; opacity:0.4; }
+
+  /* Responsive */
+  @media(max-width:600px) {
+    nav { padding:0 1rem; }
+    .hero-title { letter-spacing:-1px; }
+    .nav-links button:not(.btn-nav-cta):not(.theme-toggle) { display:none; }
+    .stats-row { gap:2rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="showPage('home')">SkillConnect</div>
+  <div class="nav-links">
+    <button onclick="showPage('home')">Home</button>
+    <button id="exploreNavBtn" onclick="showPage('search')" style="display:none">Explore</button>
+    <div id="userNavChip" style="display:none;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:40px;padding:0.3rem 0.9rem 0.3rem 0.4rem;cursor:pointer" onclick="showMyProfile()">
+      <div id="navAvatar" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:0.8rem;color:white;flex-shrink:0"></div>
+      <span id="navName" style="font-size:0.85rem;font-weight:500;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <button id="authBtn" class="btn-nav-cta" onclick="showPage('auth')">Get Started</button>
+    <button id="logoutBtn" style="display:none" onclick="logout()">↩ Logout</button>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge">✨ <span>New</span> — Free during beta</div>
+    <h1 class="hero-title">Find Skills.<br><span class="gradient-text">Share Knowledge.</span></h1>
+    <p class="hero-sub">SkillConnect brings together people who want to learn with those who love to teach. No fees, no barriers — just real skills.</p>
+    <div class="hero-btns" id="heroBtns">
+      <button class="btn-primary" id="heroMainBtn" onclick="showPage('auth')">Join for Free →</button>
+      <button class="btn-secondary" id="heroExploreBtn" onclick="showPage('search')">Explore Skills</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">2,400+</div><div class="stat-label">Active Users</div></div>
+      <div class="stat"><div class="stat-num">180+</div><div class="stat-label">Skill Categories</div></div>
+      <div class="stat"><div class="stat-num">96%</div><div class="stat-label">Satisfaction Rate</div></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <p class="section-title">Everything you need to grow</p>
+    <p class="section-sub">Powerful features to make learning and teaching effortless</p>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">Smart Search</div>
+        <div class="feature-desc">Find exactly who you need by skill, field, or availability. Our matching algorithm connects you instantly.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🎓</div>
+        <div class="feature-title">Verified Teachers</div>
+        <div class="feature-desc">Every teacher has a detailed profile with skills, reviews, and portfolio. Know who you're learning from.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">Direct Connect</div>
+        <div class="feature-desc">Message teachers directly, no middleman. Schedule sessions and start learning on your own terms.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">⭐</div>
+        <div class="feature-title">Favorites List</div>
+        <div class="feature-desc">Save your favorite teachers and learners to come back to. Build your personal learning network.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🌙</div>
+        <div class="feature-title">Dark & Light Mode</div>
+        <div class="feature-desc">Study day or night with a beautiful interface that adapts to your preference automatically.</div>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🚀</div>
+        <div class="feature-title">Free to Start</div>
+        <div class="feature-desc">Create your profile, connect, and start learning — completely free. Premium features coming soon.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="page-auth" class="page">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <h2 id="authTitle">Create Account</h2>
+      <p id="authSub">Join thousands of learners and teachers</p>
+      <div id="registerFields">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input class="form-input" id="regName" type="text" placeholder="Your name">
+          <div class="error-msg" id="errName">Please enter your name</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input class="form-input" id="authEmail" type="email" placeholder="you@example.com">
+        <div class="error-msg" id="errEmail">Please enter a valid email</div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="form-input" id="authPass" type="password" placeholder="Min. 6 characters">
+        <div class="error-msg" id="errPass">Password must be at least 6 characters</div>
+      </div>
+      <div id="registerExtra">
+        <div class="form-group">
+          <label>Your Skill Field</label>
+          <input class="form-input" id="regField" type="text" placeholder="e.g. Mathematics, Programming, Design">
+        </div>
+        <div class="form-group">
+          <label>I want to</label>
+          <div class="role-options">
+            <div class="role-opt" id="roleLearn" onclick="selectRole('learn')">
+              <span class="role-icon">📚</span>Learn
+            </div>
+            <div class="role-opt" id="roleTeach" onclick="selectRole('teach')">
+              <span class="role-icon">🎓</span>Teach
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>About me (optional)</label>
+          <input class="form-input" id="regBio" type="text" placeholder="Short description...">
+        </div>
+      </div>
+      <button class="btn-primary btn-submit" id="authActionBtn" onclick="handleAuth()">Create Account</button>
+      <div class="auth-toggle">
+        <span id="authToggleText">Already have an account?</span>
+        <a onclick="toggleAuthMode()"> <span id="authToggleLink">Sign In</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH PAGE -->
+<div id="page-search" class="page">
+  <div class="page-wrap">
+    <div class="page-header">
+      <h2>Explore Skills</h2>
+      <p>Find teachers and learners in your field</p>
+    </div>
+    <div class="search-bar-row">
+      <div class="search-input-wrap">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search by name or skill..." oninput="renderUsers()">
+      </div>
+      <select class="filter-select" id="roleFilter" onchange="renderUsers()">
+        <option value="">All Roles</option>
+        <option value="teach">Teachers</option>
+        <option value="learn">Learners</option>
+      </select>
+      <select class="filter-select" id="fieldFilter" onchange="renderUsers()">
+        <option value="">All Fields</option>
+      </select>
+    </div>
+    <div class="users-grid" id="usersGrid"></div>
+  </div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div id="page-profile" class="page">
+  <div class="profile-wrap">
+    <div class="profile-header">
+      <div class="profile-top">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div class="profile-info" style="flex:1">
+          <h2 id="profileName">—</h2>
+          <div class="field-tag" id="profileField">—</div>
+          <div id="profileRole" style="margin-left:0.5rem;display:inline-block"></div>
+          <p class="bio" id="profileBio">—</p>
+        </div>
+      </div>
+      <div class="profile-actions" id="profileActions">
+        <!-- filled dynamically -->
+      </div>
+    </div>
+    <div class="profile-section">
+      <h3>Skills & Topics</h3>
+      <div class="skill-chips" id="profileSkills"></div>
+    </div>
+
+    <!-- Lesson Request Form (shown only for teachers) -->
+    <div class="profile-section" id="lessonRequestSection" style="display:none">
+      <h3>📩 Request a Lesson</h3>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.2rem;font-weight:300">מלאי את הפרטים ונשלח הודעה למורה ישירות למייל שלו/שלה</p>
+      <div class="form-group">
+        <label>שמך המלא</label>
+        <input class="form-input" id="reqName" type="text" placeholder="למשל: נועה כהן">
+      </div>
+      <div class="form-group">
+        <label>המייל שלך</label>
+        <input class="form-input" id="reqEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>מה תרצי/ה ללמוד?</label>
+        <input class="form-input" id="reqTopic" type="text" placeholder="למשל: אלגברה, JavaScript, פיגמה...">
+      </div>
+      <div class="form-group">
+        <label>הודעה קצרה (אופציונלי)</label>
+        <input class="form-input" id="reqMsg" type="text" placeholder="שלום! ראיתי את הפרופיל שלך...">
+      </div>
+      <button class="btn-primary" onclick="sendLessonRequest()" style="width:100%;margin-top:0.5rem">
+        📨 שלח/י בקשה למורה
+      </button>
+      <div id="reqError" style="color:#f87171;font-size:0.82rem;margin-top:0.5rem;display:none"></div>
+    </div>
+
+    <!-- Premium Banner (shown only for teachers) -->
+
+    <div class="profile-section" id="myProfileSection" style="display:none">
+      <h3>My Account</h3>
+      <p style="color:var(--muted);font-size:0.9rem;font-weight:300">Logged in as <strong id="myEmail" style="color:var(--text)"></strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <button class="btn-primary" onclick="closeModal()">Got it!</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Init EmailJS
+emailjs.init("LUAUZoFLnoNXhhgnT");
+
+// ===================== DATA =====================
+const DEMO_USERS = [
+  // 6 Teachers
+  { id:101, name:"Jonathan Levy", email:"jonathan@demo.com", role:"teach", field:"Mathematics", bio:"Math teacher with 9 years of experience. Specializing in algebra, calculus and statistics.", skills:["Algebra","Calculus","Statistics","Geometry"] },
+  { id:102, name:"Michelle Cohen", email:"michelle@demo.com", role:"teach", field:"Programming", bio:"Full-Stack developer and passionate educator. Teaching JavaScript, React and Python to beginners.", skills:["JavaScript","React","Python","Node.js"] },
+  { id:103, name:"Noa Shapiro", email:"noa@demo.com", role:"teach", field:"Design", bio:"Senior product designer at a startup. Teaching UI/UX design and Figma at all levels.", skills:["Figma","UI/UX","Product Design","Branding"] },
+  { id:104, name:"Dana Peretz", email:"dana@demo.com", role:"teach", field:"Music", bio:"Classical piano teacher with 10+ years of experience. Teaching music theory and performance.", skills:["Piano","Music Theory","Harmony","Solfege"] },
+  { id:105, name:"Yoni Goldstein", email:"yoni@demo.com", role:"teach", field:"Physics", bio:"Physics PhD student who loves explaining complex topics in a simple and clear way.", skills:["Mechanics","Electromagnetism","Quantum","Thermodynamics"] },
+  { id:106, name:"Orit Ben-David", email:"orit@demo.com", role:"teach", field:"English", bio:"English teacher with a linguistics degree. Preparing students for exams, IELTS and SAT.", skills:["Grammar","Academic Writing","IELTS","Conversation"] },
+  // 6 Learners
+  { id:201, name:"Rotem Mizrahi", email:"rotem@demo.com", role:"learn", field:"Programming", bio:"CS student looking to strengthen JavaScript and React skills before job interviews.", skills:["HTML","CSS","Git"] },
+  { id:202, name:"Shira Katz", email:"shira@demo.com", role:"learn", field:"Mathematics", bio:"High school student preparing for a math exam. Looking for a patient and clear tutor.", skills:["Algebra","Geometry"] },
+  { id:203, name:"Eitan Abraham", email:"eitan@demo.com", role:"learn", field:"Design", bio:"Graphic designer wanting to transition to digital design and learn Figma from scratch.", skills:["Photoshop","Illustrator"] },
+  { id:204, name:"Tamar Lavie", email:"tamar@demo.com", role:"learn", field:"Music", bio:"Complete beginner who wants to learn piano. Dreamed about it for years and finally starting!", skills:[] },
+  { id:205, name:"Guy Nachimias", email:"guy@demo.com", role:"learn", field:"Physics", bio:"High school student struggling with physics. Needs help with mechanics and electrostatics.", skills:["Basic Math"] },
+  { id:206, name:"Lee Green", email:"lee@demo.com", role:"learn", field:"English", bio:"Works in tech and wants to improve professional English for meetings and presentations.", skills:["Basic English"] },
+];
+
+// On first ever visit, seed demo users so they persist
+// FORCE RESET — run once to wipe old bad data
+// One-time reset for old data — keeps registered users safe
+if (localStorage.getItem('sc_version') !== '4') {
+  const savedUsers = localStorage.getItem('sc_users');
+  localStorage.clear();
+  localStorage.setItem('sc_version', '4');
+  if (savedUsers) localStorage.setItem('sc_users', savedUsers);
+}
+// Always start logged out — login required each visit
+let currentUser = null;
+let favorites = JSON.parse(localStorage.getItem('sc_favs') || '[]');
+let registeredUsers = JSON.parse(localStorage.getItem('sc_users') || '[]');
+let allUsers = [...DEMO_USERS, ...registeredUsers];
+let viewingUser = null;
+let authMode = 'register'; // 'register' or 'login'
+let selectedRole = null;
+let darkMode = localStorage.getItem('sc_dark') !== 'false';
+
+// ===================== INIT =====================
+function init() {
+  // נקה משתמשים רשומים ישנים (דמו בלבד, ללא localStorage של יוזרים)
+  // שמור רק את ה-currentUser אם קיים
+  applyTheme();
+  updateNav();
+  if (currentUser) showPage('home');
+  renderUsers();
+  populateFieldFilter();
+}
+
+function applyTheme() {
+  document.body.classList.toggle('light', !darkMode);
+  document.querySelector('.theme-toggle').textContent = darkMode ? '🌙' : '☀️';
+}
+
+function toggleTheme() {
+  darkMode = !darkMode;
+  localStorage.setItem('sc_dark', darkMode);
+  applyTheme();
+}
+
+function updateNav() {
+  const loggedIn = !!currentUser;
+  // Auth button
+  document.getElementById('authBtn').style.display = loggedIn ? 'none' : '';
+  document.getElementById('logoutBtn').style.display = loggedIn ? '' : 'none';
+  // Explore nav link — only when logged in
+  document.getElementById('exploreNavBtn').style.display = loggedIn ? '' : 'none';
+  // User chip (avatar + name)
+  const chip = document.getElementById('userNavChip');
+  chip.style.display = loggedIn ? 'flex' : 'none';
+  if (loggedIn && currentUser) {
+    document.getElementById('navAvatar').textContent = currentUser.name[0].toUpperCase();
+    document.getElementById('navName').textContent = currentUser.name.split(' ')[0];
+  }
+  // Hero buttons
+  const heroMain = document.getElementById('heroMainBtn');
+  const heroExplore = document.getElementById('heroExploreBtn');
+  if (heroMain && heroExplore) {
+    if (loggedIn) {
+      heroMain.textContent = 'Go to Explore →';
+      heroMain.onclick = () => showPage('search');
+      heroExplore.style.display = 'none';
+    } else {
+      heroMain.textContent = 'Join for Free →';
+      heroMain.onclick = () => showPage('auth');
+      heroExplore.style.display = '';
+    }
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('sc_user');
+  updateNav();
+  showPage('home');
+  showToast('Logged out successfully');
+}
+
+// ===================== PAGES =====================
+function showPage(page) {
+  // Guard: search requires login
+  if (page === 'search' && !currentUser) {
+    page = 'auth';
+  }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'profile') {
+    if (viewingUser) {
+      renderPublicProfile(viewingUser);
+    } else if (currentUser) {
+      renderMyProfile();
+    } else {
+      showPage('auth');
+      return;
+    }
+  }
+  if (page === 'search') {
+    // Reset field filter so new users aren't hidden
+    const ff = document.getElementById('fieldFilter');
+    if (ff) ff.value = '';
+    const si = document.getElementById('searchInput');
+    if (si) si.value = '';
+    renderUsers();
+  }
+  window.scrollTo(0,0);
+}
+
+function showMyProfile() {
+  viewingUser = null;
+  showPage('profile');
+}
+
+function showUserProfile(userId) {
+  if (!currentUser) { showPage('auth'); return; }
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+  // Anyone can view anyone
+  viewingUser = user;
+  renderPublicProfile(user);
+  showPage('profile');
+}
+
+// ===================== RENDER =====================
+function renderMyProfile() {
+  if (!currentUser) return;
+  const u = currentUser;
+  document.getElementById('profileAvatar').textContent = u.name[0].toUpperCase();
+  document.getElementById('profileName').textContent = u.name;
+  document.getElementById('profileField').textContent = u.field || 'General';
+  document.getElementById('profileRole').innerHTML = `<span class="user-role-badge ${u.role==='teach'?'badge-teacher':'badge-learner'}">${u.role==='teach'?'🎓 Teacher':'📚 Learner'}</span>`;
+  document.getElementById('profileBio').textContent = u.bio || 'No bio yet.';
+  document.getElementById('profileSkills').innerHTML = (u.skills||[]).map(s=>`<div class="skill-chip">${s}</div>`).join('') || '<span style="color:var(--muted);font-size:0.85rem">No skills added yet</span>';
+  document.getElementById('myProfileSection').style.display = '';
+  document.getElementById('myEmail').textContent = u.email;
+  // Hide sections not relevant on own profile
+  document.getElementById('lessonRequestSection').style.display = 'none';
+  document.getElementById('profileActions').innerHTML = `
+    <button class="btn-secondary" style="border-radius:40px;padding:0.65rem 1.5rem;font-size:0.9rem;font-family:'DM Sans',sans-serif;cursor:pointer" onclick="showPage('search')">🔍 Explore Skills</button>`;
+}
+
+function renderPublicProfile(user) {
+  document.getElementById('profileAvatar').textContent = user.name[0].toUpperCase();
+  document.getElementById('profileName').textContent = user.name;
+  document.getElementById('profileField').textContent = user.field || 'General';
+  document.getElementById('profileRole').innerHTML = `<span class="user-role-badge ${user.role==='teach'?'badge-teacher':'badge-learner'}">${user.role==='teach'?'🎓 Teacher':'📚 Learner'}</span>`;
+  document.getElementById('profileBio').textContent = user.bio || 'No bio provided.';
+  document.getElementById('profileSkills').innerHTML = (user.skills||[]).map(s=>`<div class="skill-chip">${s}</div>`).join('') || '<span style="color:var(--muted);font-size:0.85rem">No skills listed</span>';
+  document.getElementById('myProfileSection').style.display = 'none';
+
+  // talmid sees only teachers, moreh sees only learners
+  // lessonRequest shown only when learner views teacher
+  const isTeacher = user.role === 'teach';
+  const isViewingSelf = currentUser && currentUser.id === user.id;
+  // Show lesson request when viewing a teacher who is NOT yourself
+  document.getElementById('lessonRequestSection').style.display = (isTeacher && !isViewingSelf) ? '' : 'none';
+
+  // Pre-fill form if logged in
+  if (currentUser) {
+    document.getElementById('reqName').value = currentUser.name || '';
+    document.getElementById('reqEmail').value = currentUser.email || '';
+  }
+
+  // Actions row
+  const actions = document.getElementById('profileActions');
+  if (isTeacher) {
+    actions.innerHTML = `
+      <button class="btn-contact" onclick="scrollToRequestForm()">📩 Request a Lesson</button>
+      <button class="btn-secondary" style="border-radius:40px;padding:0.65rem 1.5rem;font-size:0.9rem;font-family:'DM Sans',sans-serif;cursor:pointer" onclick="showPage('search')">← Back</button>`;
+  } else {
+    actions.innerHTML = `
+      <button class="btn-secondary" style="border-radius:40px;padding:0.65rem 1.5rem;font-size:0.9rem;font-family:'DM Sans',sans-serif;cursor:pointer" onclick="showPage('search')">← Back to Explore</button>`;
+  }
+}
+
+function renderUsers() {
+  registeredUsers = JSON.parse(localStorage.getItem('sc_users') || '[]');
+  allUsers = [...DEMO_USERS, ...registeredUsers];
+  const grid = document.getElementById('usersGrid');
+  if (!grid) return;
+
+  // Must be logged in to browse
+  if (!currentUser) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">🔒</div>
+      <p style="margin-bottom:1rem">התחברי כדי לראות מורים ותלמידים</p>
+      <button class="btn-primary" onclick="showPage('auth')" style="margin:0 auto;display:inline-block">התחברי / הרשמי</button>
+    </div>`;
+    return;
+  }
+
+  // Simple: teacher sees learners, learner sees teachers
+  const oppositeRole = currentUser.role === 'teach' ? 'learn' : 'teach';
+
+  const pageTitleEl = document.querySelector('#page-search .page-header h2');
+  const pageSubEl = document.querySelector('#page-search .page-header p');
+  if (pageTitleEl) pageTitleEl.textContent = currentUser.role === 'teach' ? 'Find a Student' : 'Find a Teacher';
+  if (pageSubEl) pageSubEl.textContent = currentUser.role === 'teach' ? 'Students looking for help in your field' : 'Browse available teachers and request a lesson';
+
+  // Remove mode switcher if exists
+  const oldBar = document.getElementById('modeSwitchBar');
+  if (oldBar) oldBar.remove();
+  const roleFilterEl = document.getElementById('roleFilter');
+  if (roleFilterEl) roleFilterEl.style.display = 'none';
+
+  const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  const fieldF = document.getElementById('fieldFilter')?.value || '';
+
+  let filtered = allUsers.filter(u => {
+    if (String(u.id) === String(currentUser.id)) return false;
+    if (u.role !== oppositeRole) return false;
+    const matchSearch = !search || u.name.toLowerCase().includes(search) || (u.field||'').toLowerCase().includes(search) || (u.bio||'').toLowerCase().includes(search) || (u.skills||[]).some(s=>s.toLowerCase().includes(search));
+    const matchField = !fieldF || u.field === fieldF;
+    return matchSearch && matchField;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><p>לא נמצאו תוצאות. נסי חיפוש אחר.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(u => {
+    const isFav = favorites.includes(u.id);
+    return `<div class="user-card fade-in">
+      <button class="fav-btn ${isFav?'active':''}" onclick="toggleFav(event,${u.id})" title="${isFav?'הסר ממועדפים':'שמור למועדפים'}">${isFav?'⭐':'☆'}</button>
+      <div class="user-avatar">${u.name[0].toUpperCase()}</div>
+      <div class="user-name">${u.name}</div>
+      <span class="user-role-badge ${u.role==='teach'?'badge-teacher':'badge-learner'}">${u.role==='teach'?'🎓 מורה':'📚 תלמיד'}</span>
+      <div class="user-field">📌 ${u.field||'General'}</div>
+      <div class="user-desc">${u.bio||'No bio yet.'}</div>
+      <button class="btn-view" onclick="showUserProfile(${u.id})">View Profile →</button>
+    </div>`;
+  }).join('');
+}
+
+function populateFieldFilter() {
+  const fields = [...new Set(allUsers.map(u=>u.field).filter(Boolean))];
+  const sel = document.getElementById('fieldFilter');
+  if (!sel) return;
+  fields.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f; opt.textContent = f;
+    sel.appendChild(opt);
+  });
+}
+
+// ===================== AUTH =====================
+function toggleAuthMode() {
+  authMode = authMode === 'register' ? 'login' : 'register';
+  const isReg = authMode === 'register';
+  document.getElementById('authTitle').textContent = isReg ? 'Create Account' : 'Welcome Back';
+  document.getElementById('authSub').textContent = isReg ? 'Join thousands of learners and teachers' : 'Sign in to your SkillConnect account';
+  document.getElementById('authActionBtn').textContent = isReg ? 'Create Account' : 'Sign In';
+  document.getElementById('authToggleText').textContent = isReg ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('authToggleLink').textContent = isReg ? 'Sign In' : 'Register';
+  document.getElementById('registerFields').style.display = isReg ? '' : 'none';
+  // Show role selector also on login (to pick which account to log into)
+  document.getElementById('registerExtra').style.display = '';
+  document.getElementById('regField').closest('.form-group').style.display = isReg ? '' : 'none';
+  document.getElementById('regBio').closest('.form-group').style.display = isReg ? '' : 'none';
+  const roleLabel = document.getElementById('roleSelectorLabel');
+  if (roleLabel) roleLabel.textContent = isReg ? 'I want to' : 'Sign in as';
+}
+
+function selectRole(role) {
+  selectedRole = role;
+  document.getElementById('roleLearn').classList.toggle('selected', role==='learn');
+  document.getElementById('roleTeach').classList.toggle('selected', role==='teach');
+}
+
+function handleAuth() {
+  clearErrors();
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  let valid = true;
+
+  if (!email || !email.includes('@')) { showErr('errEmail'); valid=false; }
+  if (!pass || pass.length < 6) { showErr('errPass'); valid=false; }
+  if (!valid) return;
+
+  const role = selectedRole || 'learn';
+
+  if (authMode === 'login') {
+    const users = [...DEMO_USERS, ...JSON.parse(localStorage.getItem('sc_users')||'[]')];
+    // Find by email + password
+    const found = users.find(u => u.email === email);
+    if (!found) {
+      showErr('errEmail', 'No account found with this email');
+      return;
+    }
+    // Check password (demo users have no password — any password works for them)
+    if (found.pass && found.pass !== pass) {
+      showErr('errPass', 'Wrong password');
+      return;
+    }
+    // Apply selected role (same person can enter as teacher or learner)
+    currentUser = { ...found, role: role };
+    localStorage.setItem('sc_user', JSON.stringify(currentUser));
+    updateNav();
+    showToast('Welcome back, ' + found.name + '! 👋');
+    showPage('search');
+    return;
+  }
+
+  // ── REGISTER ──────────────────────────────────────────────────────────────
+  const name = document.getElementById('regName').value.trim();
+  if (!name) { showErr('errName'); valid=false; }
+  if (!valid) return;
+
+  const field = document.getElementById('regField').value.trim() || 'General';
+  const bio = document.getElementById('regBio').value.trim();
+
+  const existingUsers = JSON.parse(localStorage.getItem('sc_users')||'[]');
+  const allExist = [...DEMO_USERS, ...existingUsers];
+
+  // Check if email + password already exist → just log in, don't create new user
+  const existingMatch = allExist.find(u => u.email === email && u.pass === pass);
+  if (existingMatch) {
+    currentUser = { ...existingMatch, role: role };
+    registeredUsers = existingUsers;
+    allUsers = [...DEMO_USERS, ...registeredUsers];
+    localStorage.setItem('sc_user', JSON.stringify(currentUser));
+    updateNav();
+    showToast('Welcome back, ' + existingMatch.name + '! 👋');
+    showPage('search');
+    return;
+  }
+
+  // Check if email exists but password is wrong
+  const emailExists = allExist.find(u => u.email === email);
+  if (emailExists) {
+    showErr('errPass', 'Wrong password for this email');
+    return;
+  }
+
+  // New user — create and save
+  const newUser = { id: Date.now(), name, email, pass, role, field, bio, skills: field ? [field] : [] };
+  existingUsers.push(newUser);
+  localStorage.setItem('sc_users', JSON.stringify(existingUsers));
+  currentUser = newUser;
+  registeredUsers = existingUsers;
+  allUsers = [...DEMO_USERS, ...registeredUsers];
+  localStorage.setItem('sc_user', JSON.stringify(currentUser));
+  updateNav();
+  showToast('Welcome to SkillConnect, ' + name + '! 🎉');
+  showPage('search');
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (msg) el.textContent = msg;
+  el.style.display = 'block';
+}
+function clearErrors() {
+  document.querySelectorAll('.error-msg').forEach(e => e.style.display='none');
+}
+
+// ===================== FAVORITES =====================
+function toggleFav(event, userId) {
+  event.stopPropagation();
+  if (!currentUser) { showModal('Login Required','Please sign in to save favorites ⭐'); return; }
+  const idx = favorites.indexOf(userId);
+  if (idx === -1) { favorites.push(userId); showToast('Added to favorites ⭐'); }
+  else { favorites.splice(idx,1); showToast('Removed from favorites'); }
+  localStorage.setItem('sc_favs', JSON.stringify(favorites));
+  renderUsers();
+}
+
+// ===================== MODAL / TOAST =====================
+function showModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay') || e.currentTarget.classList.contains('modal-close'))
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===================== LESSON REQUEST =====================
+
+
+function scrollToRequestForm() {
+  document.getElementById('lessonRequestSection').scrollIntoView({ behavior:'smooth', block:'start' });
+  setTimeout(() => document.getElementById('reqName').focus(), 400);
+}
+
+function sendLessonRequest() {
+  const name = document.getElementById('reqName').value.trim();
+  const email = document.getElementById('reqEmail').value.trim();
+  const topic = document.getElementById('reqTopic').value.trim();
+  const msg = document.getElementById('reqMsg').value.trim();
+  const errEl = document.getElementById('reqError');
+  errEl.style.display = 'none';
+
+  if (!name || !email || !topic) {
+    errEl.textContent = '⚠️ Please fill in name, email and topic';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!email.includes('@')) {
+    errEl.textContent = '⚠️ Invalid email address';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const teacher = viewingUser;
+  const sendBtn = document.querySelector('#lessonRequestSection .btn-primary');
+  sendBtn.textContent = 'Sending...';
+  sendBtn.disabled = true;
+
+  emailjs.send('service_w6p8mlg', 'template_hrk4mss', {
+    teacher_name: teacher.name,
+    teacher_email: teacher.email,
+    student_name: name,
+    student_email: email,
+    topic: topic,
+    message: msg || 'No message provided',
+    to_email: teacher.email,
+    email: teacher.email,
+  })
+  .then(() => {
+    sendBtn.textContent = '✅ Request Sent!';
+    sendBtn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+    showToast('✅ Message sent to ' + teacher.name + '!');
+    document.getElementById('reqName').value = '';
+    document.getElementById('reqEmail').value = '';
+    document.getElementById('reqTopic').value = '';
+    document.getElementById('reqMsg').value = '';
+    setTimeout(() => {
+      sendBtn.textContent = '📨 Send Request to Teacher';
+      sendBtn.disabled = false;
+      sendBtn.style.background = '';
+    }, 4000);
+  })
+  .catch((err) => {
+    sendBtn.textContent = '📨 Send Request to Teacher';
+    sendBtn.disabled = false;
+    errEl.textContent = '❌ Failed to send. Please try again.';
+    errEl.style.display = 'block';
+    console.error('EmailJS error:', err);
+  });
+}
+
+
+init();
+</script>
+</body>
+</html>
